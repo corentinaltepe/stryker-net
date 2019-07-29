@@ -29,7 +29,7 @@ namespace Stryker.Core.Reporters
             var mutants = folderComponent.ReadOnlyMutants.
                 Select(mutant => new JsonTestedMutant() {Id = mutant.Id, 
                     Location = new JsonMutantLocation(mutant.Mutation.OriginalNode.GetLocation().GetMappedLineSpan()), 
-                    Status = mutant.ResultStatus.ToString(), 
+                    Status = mutant.ResultStatus, 
                     Replacement = mutant.Mutation.ReplacementNode.ToFullString(),
                     Tests = mutant.CoveringTest 
                 }).ToList();

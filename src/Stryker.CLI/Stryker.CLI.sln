@@ -13,6 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stryker.Core.UnitTest", "..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stryker.DataCollector", "..\Stryker.DataCollector\Stryker.DataCollector\Stryker.DataCollector.csproj", "{C5C14231-5DA6-4E3C-802C-6D76C0222FE4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestStatisticsAnalyzer", "TestStatisticsAnalyzer\TestStatisticsAnalyzer.csproj", "{F389EF1E-631F-4527-B256-93BEE1DC10E8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FC692334-8360-4A94-8692-5768ADC5DD04} = {FC692334-8360-4A94-8692-5768ADC5DD04}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +44,10 @@ Global
 		{C5C14231-5DA6-4E3C-802C-6D76C0222FE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5C14231-5DA6-4E3C-802C-6D76C0222FE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5C14231-5DA6-4E3C-802C-6D76C0222FE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F389EF1E-631F-4527-B256-93BEE1DC10E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F389EF1E-631F-4527-B256-93BEE1DC10E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F389EF1E-631F-4527-B256-93BEE1DC10E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F389EF1E-631F-4527-B256-93BEE1DC10E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
