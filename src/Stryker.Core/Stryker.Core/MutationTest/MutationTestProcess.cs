@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Stryker.Core.CoverageAnalysis;
 using Stryker.Core.Logging;
 using Stryker.Core.MutantFilters;
@@ -213,7 +213,6 @@ namespace Stryker.Core.MutationTest
         {
             _coverageAnalyser.DetermineTestCoverage();
         }
-
 
     }
 }

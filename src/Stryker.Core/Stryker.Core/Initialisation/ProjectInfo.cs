@@ -1,4 +1,4 @@
-﻿using Buildalyzer;
+using Buildalyzer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
@@ -148,48 +148,7 @@ namespace Stryker.Core.Initialisation
 
         private IList<string> BuildDefineConstants()
         {
-            var constants = GetPropertyOrDefault("DefineConstants", "").Split(";").Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-
-            var (frameworkDoesNotSupportAppDomain, frameworkDoesNotSupportPipes) = CompatibilityModes;
-
-            if (frameworkDoesNotSupportAppDomain)
-            {
-                constants.Add("STRYKER_NO_DOMAIN");
-            }
-            if (frameworkDoesNotSupportPipes)
-            {
-                constants.Add("STRYKER_NO_PIPE");
-            }
-
-            return constants;
-        }
-
-        public (bool compat_noAppDomain, bool compat_noPipe) CompatibilityModes
-        {
-            get
-            {
-                var (framework, version) = TargetFrameworkAndVersion;
-
-                var compat_noAppDomain = false;
-                var compat_noPipe = false;
-
-                switch (framework)
-                {
-                    case Framework.DotNet when version.Major < 2:
-                        compat_noAppDomain = true;
-                        break;
-                    case Framework.DotNetStandard when version.Major < 2:
-                        compat_noAppDomain = true;
-                        compat_noPipe = true;
-                        break;
-                    case Framework.Unknown:
-                    case Framework.DotNetClassic:
-                        compat_noPipe = version < new Version(3, 5);
-                        break;
-                }
-
-                return (compat_noAppDomain, compat_noPipe);
-            }
+            return GetPropertyOrDefault("DefineConstants", "").Split(";").Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         }
 
         public string ProjectFilePath
@@ -243,10 +202,10 @@ namespace Stryker.Core.Initialisation
         {
             return TargetFrameworkVersionString switch
             {
-                string framework when framework.StartsWith("netcoreapp") => Framework.DotNet,
-                string framework when framework.StartsWith("netstandard") => Framework.DotNetStandard,
-                string framework when framework.StartsWith("net") && char.GetNumericValue(framework[3]) >= 5 => Framework.DotNet,
-                string framework when framework.StartsWith("net") && char.GetNumericValue(framework[3]) <= 4 => Framework.DotNetClassic,
+                { } framework when framework.StartsWith("netcoreapp") => Framework.DotNet,
+                { } framework when framework.StartsWith("netstandard") => Framework.DotNetStandard,
+                { } framework when framework.StartsWith("net") && char.GetNumericValue(framework[3]) >= 5 => Framework.DotNet,
+                { } framework when framework.StartsWith("net") && char.GetNumericValue(framework[3]) <= 4 => Framework.DotNetClassic,
                 _ => Framework.Unknown
             };
         }

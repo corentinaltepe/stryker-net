@@ -16,7 +16,7 @@ namespace Stryker.Core.TestRunners
 
         int DiscoverNumberOfTests();
 
-        TestRunResult CaptureCoverage(IEnumerable<Mutant> mutants, bool cantUseAppDomain, bool cantUsePipe);
+        TestRunResult CaptureCoverage(IEnumerable<Mutant> mutants);
 
         IEnumerable<TestDescription> Tests { get; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.CodeAnalysis;
 
 namespace Stryker.Core.Instrumentation
@@ -24,7 +24,7 @@ namespace Stryker.Core.Instrumentation
             {
                 return Revert(tNode);
             }
-            throw new InvalidOperationException($"Expected a block containing a conditional expressionn, found:\n{node.ToFullString()}.");
+            throw new InvalidOperationException($"Expected a block containing a conditional expression, found:\n{node.ToFullString()}.");
         }
     }
 }

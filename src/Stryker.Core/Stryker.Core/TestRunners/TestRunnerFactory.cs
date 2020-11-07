@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Stryker.Core.Initialisation;
 using Stryker.Core.Logging;
 using Stryker.Core.Options;
@@ -24,10 +24,9 @@ namespace Stryker.Core.TestRunners
 
             switch (options.TestRunner)
             {
-                case TestRunner.DotnetTest:
                 default:
-                    testRunner = new DotnetTestRunner(projectInfo.ProjectUnderTestAnalyzerResult.ProjectFilePath, new ProcessExecutor(), flags, projectInfo.TestProjectAnalyzerResults.Select(x => projectInfo.GetTestBinariesPath(x)));
-                    break;
+                    _logger.LogWarning($"Testrunner {options.TestRunner} is not supported, switching to {TestRunner.VsTest}.");
+                    goto case TestRunner.VsTest;
                 case TestRunner.VsTest:
                     testRunner = new VsTestRunnerPool(options, flags, projectInfo);
                     break;
