@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Stryker.Core.Helpers;
-using Stryker.Core.Mutants;
 
 namespace Stryker.Core.Instrumentation
 {
@@ -51,7 +50,7 @@ namespace Stryker.Core.Instrumentation
             }
 
             method = method.ReplaceNode(method.Body!, method.Body!.AddStatements(
-                    SyntaxFactory.ReturnStatement(SyntaxFactory.DefaultExpression(returnType).
+                    SyntaxFactory.ReturnStatement(SyntaxFactory.DefaultExpression(returnType.WithTrailingTrivia()).
                         WithLeadingTrivia(SyntaxFactory.Space).WithTrailingTrivia())));
 
             return method;

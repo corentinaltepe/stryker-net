@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -23,8 +24,14 @@ namespace Stryker.Core.Mutants.NodeOrchestrators
             targetNode = base.InjectMutations(sourceNode, targetNode, context);
             if (targetNode.Body != null)
             {
+                targetNode = MutantPlacer.AddEndingReturn(targetNode);
+                // add a default initialization to the out var
+                if (targetNode is MethodDeclarationSyntax methodDeclarationSyntax && methodDeclarationSyntax.Body != null)
+                {
+                    targetNode = MutantPlacer.InjectOutParamInit(methodDeclarationSyntax);
+                }
                 // add a return in case we changed the control flow
-                return MutantPlacer.AddEndingReturn(targetNode) as T;
+                return targetNode as T;
             }
 
             if (!context.HasStatementLevelMutant)

@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 using Stryker.Core.InjectedHelpers;
 using Stryker.Core.Mutants;
@@ -118,7 +118,10 @@ else{
 }
 private bool Out(out string test)
 {
+test=default(string);
+{
     return (StrykerNamespace.MutantControl.IsActive(14)?false:true);
+}
 }}";
 
             ShouldMutateSourceToExpected(source, expected);
@@ -147,7 +150,10 @@ else{
 }
 }private bool Out(out string test)
 {
+test=default(string);
+{
     return (StrykerNamespace.MutantControl.IsActive(2)?false:true);
+}
 }";
 
             ShouldMutateSourceToExpected(source, expected);
@@ -726,6 +732,23 @@ const string text = ""a""+""b""+""c"";}";
         }
 
         [Fact]
+        public void ShouldAddDefaultInitToOutParam()
+        {
+            var source = @"public void TestMethod(out string test)
+{
+    test = string.Empty;
+}";
+            var expected = @"public void TestMethod(out string test)
+{
+    test = default(string);
+{
+    test = (StrykerNamespace.MutantControl.IsActive(0)?""Stryker was here!"":string.Empty);
+}
+}";
+            ShouldMutateSourceToExpected(source, expected);
+        }
+
+        [Fact]
         public void ShouldNotAddReturnDefaultToEnumerationMethods()
         {
             string source = @"public static IEnumerable<object> Extracting<T>(this IEnumerable<T> enumerable, string propertyName)
@@ -748,11 +771,11 @@ const string text = ""a""+""b""+""c"";}";
         [Fact]
         public void ShouldAddReturnDefaultToAsyncWithFullNamespaceMethods()
         {
-            string source = @"public async System.Threading.Tasks.Task<bool> TestMethod()
+            var source = @"public async System.Threading.Tasks.Task<bool> TestMethod()
 {
     ;
 }";
-            string expected = @"public async System.Threading.Tasks.Task<bool> TestMethod()
+            var expected = @"public async System.Threading.Tasks.Task<bool> TestMethod()
 {
     ;
     return default(bool);
@@ -877,5 +900,4 @@ namespace StrykerNet.UnitTest.Mutants.TestResources
             actualNode.ShouldNotContainErrors();
         }
     }
-
 }

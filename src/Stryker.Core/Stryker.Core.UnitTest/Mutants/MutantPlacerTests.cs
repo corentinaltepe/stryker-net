@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -85,6 +85,27 @@ namespace Stryker.Core.UnitTest.Mutants
 
             node =
                 actualNode.DescendantNodes().First(t => t is BaseMethodDeclarationSyntax) as BaseMethodDeclarationSyntax;
+            // Remove marker
+            var restored= MutantPlacer.RemoveMutant(node);
+            actualNode = actualNode.ReplaceNode(node, restored);
+            actualNode.ToFullString().ShouldBeSemantically(source);
+        }
+
+        [Fact]
+        public void ShouldInitializeOutVarToDefaultAndRollback()
+        {
+            var source = "class Test {void Method(out int x, out string y){}}";
+
+            var actualNode = CSharpSyntaxTree.ParseText(source).GetRoot();
+
+            var node = actualNode.DescendantNodes().First(t => t is MethodDeclarationSyntax) as MethodDeclarationSyntax;
+            actualNode = actualNode.ReplaceNode(node, MutantPlacer.InjectOutParamInit(node));
+            actualNode.ToFullString().ShouldBeSemantically(@"class Test {void Method(out int x, out string y){x=default(int);
+y=default(string);
+{}}}");
+
+            node =
+                actualNode.DescendantNodes().First(t => t is MethodDeclarationSyntax) as MethodDeclarationSyntax;
             // Remove marker
             var restored= MutantPlacer.RemoveMutant(node);
             actualNode = actualNode.ReplaceNode(node, restored);

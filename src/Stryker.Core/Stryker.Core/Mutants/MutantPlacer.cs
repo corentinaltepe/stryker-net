@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -24,6 +24,7 @@ namespace Stryker.Core.Mutants
         private static readonly ConditionalInstrumentationEngine ConditionalEngine;
         private static readonly ExpressionToBodyEngine ExpressionEngine;
         private static readonly EndingReturnEngine endingReturnEngine;
+        private static readonly DefaultOutParEngine defaultOutParEngine;
         private static ExpressionSyntax _binaryExpression;
         private static SyntaxNode _placeHolderNode;
         
@@ -43,6 +44,8 @@ namespace Stryker.Core.Mutants
             RegisterEngine(ExpressionEngine);
             endingReturnEngine = new EndingReturnEngine(Injector);
             RegisterEngine(endingReturnEngine);
+            defaultOutParEngine = new DefaultOutParEngine(Injector);
+            RegisterEngine(defaultOutParEngine);
         }
 
         /// <summary>
@@ -59,6 +62,9 @@ namespace Stryker.Core.Mutants
                 .WithAdditionalAnnotations(new SyntaxAnnotation(MutationHelper));
 
         public static BaseMethodDeclarationSyntax AddEndingReturn(BaseMethodDeclarationSyntax node) => endingReturnEngine.InjectReturn(node);
+
+        public static MethodDeclarationSyntax InjectOutParamInit(MethodDeclarationSyntax node) =>
+            defaultOutParEngine.InjectDefaultInitializerForOutParam(node);
 
         public static BlockSyntax PlaceStaticContextMarker(BlockSyntax block) => 
             StaticEngine.PlaceStaticContextMarker(block).

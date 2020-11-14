@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Stryker.Core.Exceptions;
 using Stryker.Core.Logging;
 using Stryker.Core.Options;
@@ -65,7 +65,7 @@ namespace Stryker.Core.Initialisation
             {
                 // Analyze the test project
                 testProjectAnalyzerResults.Add(_projectFileReader.AnalyzeProject(testProjectFile, options.SolutionPath));
-            }
+            }   
             projectInfo.TestProjectAnalyzerResults = testProjectAnalyzerResults;
 
             // Determine project under test
