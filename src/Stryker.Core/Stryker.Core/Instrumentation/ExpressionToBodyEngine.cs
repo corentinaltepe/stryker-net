@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -38,23 +38,21 @@ namespace Stryker.Core.Instrumentation
 
             BaseMethodDeclarationSyntax result = method switch
             {
-                MethodDeclarationSyntax actualMethod => actualMethod.Update(actualMethod.AttributeLists,
-                    actualMethod.Modifiers, actualMethod.ReturnType, actualMethod.ExplicitInterfaceSpecifier,
-                    actualMethod.Identifier, actualMethod.TypeParameterList, actualMethod.ParameterList,
-                    actualMethod.ConstraintClauses, statement, null, SyntaxFactory.Token(SyntaxKind.None)),
-                OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.Update(
-                    operatorDeclaration.AttributeLists, operatorDeclaration.Modifiers, operatorDeclaration.ReturnType,
-                    operatorDeclaration.OperatorKeyword, operatorDeclaration.OperatorToken,
-                    operatorDeclaration.ParameterList, statement, SyntaxFactory.Token(SyntaxKind.None)),
-                ConversionOperatorDeclarationSyntax conversion => conversion.Update(conversion.AttributeLists,
-                    conversion.Modifiers, conversion.ImplicitOrExplicitKeyword, conversion.OperatorKeyword,
-                    conversion.Type, conversion.ParameterList, statement, null, SyntaxFactory.Token(SyntaxKind.None)),
-                DestructorDeclarationSyntax destructor => destructor.Update(destructor.AttributeLists,
-                    destructor.Modifiers, destructor.TildeToken, destructor.Identifier, destructor.ParameterList,
-                    statement, SyntaxFactory.Token(SyntaxKind.None)),
-                ConstructorDeclarationSyntax constructor => constructor.Update(constructor.AttributeLists,
-                    constructor.Modifiers, constructor.Identifier, constructor.ParameterList, constructor.Initializer,
-                    statement, SyntaxFactory.Token(SyntaxKind.None)),
+                MethodDeclarationSyntax actualMethod => actualMethod.WithBody(statement).
+                    WithExpressionBody(null).
+                    WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)),
+                OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.WithBody(statement).
+                    WithExpressionBody(null).
+                    WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)),
+                ConversionOperatorDeclarationSyntax conversion => conversion.WithBody(statement).
+                    WithExpressionBody(null).
+                    WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)),
+                DestructorDeclarationSyntax destructor => destructor.WithBody(statement).
+                    WithExpressionBody(null).
+                    WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)),
+                ConstructorDeclarationSyntax constructor => constructor.WithBody(statement).
+                    WithExpressionBody(null).
+                    WithSemicolonToken(SyntaxFactory.MissingToken(SyntaxKind.SemicolonToken)),
                 _ => method
             };
 
@@ -73,24 +71,21 @@ namespace Stryker.Core.Instrumentation
 
             return node switch
             {
-                MethodDeclarationSyntax actualMethod => actualMethod.Update(actualMethod.AttributeLists,
-                    actualMethod.Modifiers, actualMethod.ReturnType, actualMethod.ExplicitInterfaceSpecifier,
-                    actualMethod.Identifier, actualMethod.TypeParameterList, actualMethod.ParameterList,
-                    actualMethod.ConstraintClauses, null, expression, SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.Update(
-                    operatorDeclaration.AttributeLists, operatorDeclaration.Modifiers, operatorDeclaration.ReturnType,
-                    operatorDeclaration.OperatorKeyword, operatorDeclaration.OperatorToken,
-                    operatorDeclaration.ParameterList, null, expression, SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                ConversionOperatorDeclarationSyntax conversion => conversion.Update(conversion.AttributeLists,
-                    conversion.Modifiers, conversion.ImplicitOrExplicitKeyword, conversion.OperatorKeyword,
-                    conversion.Type, conversion.ParameterList, null, expression,
-                    SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                DestructorDeclarationSyntax destructor => destructor.Update(destructor.AttributeLists,
-                    destructor.Modifiers, destructor.TildeToken, destructor.Identifier, destructor.ParameterList,
-                    null, expression, SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                ConstructorDeclarationSyntax constructor => constructor.Update(constructor.AttributeLists,
-                    constructor.Modifiers, constructor.Identifier, constructor.ParameterList, constructor.Initializer,
-                    null, expression, SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                MethodDeclarationSyntax actualMethod => actualMethod.WithExpressionBody(expression).
+                    WithBody(null).
+                    WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.WithExpressionBody(expression).
+                    WithBody(null).
+                    WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                ConversionOperatorDeclarationSyntax conversion => conversion.WithExpressionBody(expression).
+                    WithBody(null).
+                    WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                DestructorDeclarationSyntax destructor => destructor.WithExpressionBody(expression).
+                    WithBody(null).
+                    WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                ConstructorDeclarationSyntax constructor => constructor.WithExpressionBody(expression).
+                    WithBody(null).
+                    WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                 _ => node
             };
         }

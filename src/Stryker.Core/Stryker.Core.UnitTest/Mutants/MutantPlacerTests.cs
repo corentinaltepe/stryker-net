@@ -68,7 +68,7 @@ namespace Stryker.Core.UnitTest.Mutants
 
         [Theory]
         [InlineData("static TestClass()=> Value-='a';","static TestClass(){ Value-='a';}")]
-        [InlineData("void TestClass()=> Value-='a';","void TestClass(){ Value-='a';}")]
+        [InlineData("void TestClass()=> Value-='a';","void TestClass(){Value-='a';}")]
         [InlineData("int TestClass()=> 1;","int TestClass(){ return 1;}")]
         [InlineData("~TestClass()=> Value-='a';","~TestClass(){ Value-='a';}")]
         [InlineData("public static operator int(Test t)=> 0;","public static operator int(Test t){ return 0;}")]
