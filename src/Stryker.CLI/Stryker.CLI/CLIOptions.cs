@@ -63,6 +63,16 @@ namespace Stryker.CLI
             JsonKey = "dev-mode"
         };
 
+        public static readonly CLIOption<int[]> TracedMutants = new CLIOption<int[]>
+        {
+            ArgumentName = "--trace-mutants",
+            ArgumentShortName = "-tm",
+            ArgumentDescription = @"Help diagnose issue with specific mutations. Only test the provided mutants ids and log extra information.",
+            DefaultValue = _defaultOptions.TracedMutants?.ToArray(),
+            ValueType = CommandOptionType.MultipleValue,
+            JsonKey = "trace-mutants"
+        };
+
         public static readonly CLIOption<int> AdditionalTimeoutMS = new CLIOption<int>
         {
             ArgumentName = "--timeout-ms",

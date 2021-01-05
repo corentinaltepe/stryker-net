@@ -201,6 +201,7 @@ namespace Stryker.CLI.UnitTest
 
         [Theory]
         [InlineData("--dev-mode")]
+        [InlineData("-dev")]
         public void StrykerCLI_WithDevModeArgument_ShouldPassDevModeArgumentsToStryker(string argName)
         {
             StrykerOptions actualOptions = null;
@@ -219,6 +220,28 @@ namespace Stryker.CLI.UnitTest
             mock.VerifyAll();
 
             actualOptions.DevMode.ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData("--trace-mutants")]
+        public void StrykerCLI_WithMutantsId_ShouldIDsToStryker(string argName)
+        {
+            StrykerOptions actualOptions = null;
+            var runResults = new StrykerRunResult(new StrykerOptions(), 0.3);
+
+            var mock = new Mock<IStrykerRunner>(MockBehavior.Strict);
+            mock.Setup(x => x.RunMutationTest(It.IsAny<StrykerOptions>(), It.IsAny<IEnumerable<LogMessage>>()))
+                .Callback<StrykerOptions, IEnumerable<LogMessage>>((c, m) => actualOptions = c)
+                .Returns(runResults)
+                .Verifiable();
+
+            var target = new StrykerCLI(mock.Object);
+
+            target.Run(new string[] { argName, "[1,5,13]" });
+
+            mock.VerifyAll();
+
+            actualOptions.TracedMutants.ShouldBe(new []{1,5,13});
         }
 
         [Theory]
@@ -408,7 +431,7 @@ namespace Stryker.CLI.UnitTest
 
             var target = new StrykerCLI(mock.Object);
 
-            target.Run(new[] { argName, @"['./StartUp.cs','./ExampleDirectory/Recursive.cs', './ExampleDirectory/Recursive2.cs']" });
+            target.Run(new[] { argName, "['./StartUp.cs','./ExampleDirectory/Recursive.cs', './ExampleDirectory/Recursive2.cs']" });
 
             var firstFileToExclude = FilePattern.Parse("!StartUp.cs");
             var secondFileToExclude = FilePattern.Parse("!ExampleDirectory/Recursive.cs");

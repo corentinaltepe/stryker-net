@@ -15,6 +15,7 @@ namespace Stryker.Core.Options
         string BasePath { get; }
         int ConcurrentTestrunners { get; }
         bool DevMode { get; }
+        IEnumerable<int> TracedMutants { get; }
         IEnumerable<Mutator> ExcludedMutations { get; }
         IEnumerable<FilePattern> FilePatterns { get; }
         IEnumerable<Regex> IgnoredMethods { get; }

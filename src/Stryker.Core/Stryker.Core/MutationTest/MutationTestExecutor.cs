@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Stryker.Core.Logging;
 using Stryker.Core.Mutants;
 using Stryker.Core.TestRunners;
@@ -35,7 +35,7 @@ namespace Stryker.Core.MutationTest
                 var result = RunTestSession(mutantsToTest, timeoutMs, updateHandler, forceSingle);
 
                 Logger.LogTrace(
-                    $"Test run for {string.Join(" ,", mutantsToTest.Select(x => x.DisplayName))} is {(result.FailingTests.Count == 0 ? "success" : "failed")} with output: {result.ResultMessage}");
+                    $"Test run for {string.Join(", ", mutantsToTest.Select(x => x.DisplayName))} is {(result.FailingTests.Count == 0 ? "success" : "failed")} with output: {result.ResultMessage}");
 
                 var remainingMutants = mutantsToTest.Where((m) => m.ResultStatus == MutantStatus.NotRun).ToList();
                 if (remainingMutants.Count == mutantsToTest.Count)
@@ -74,7 +74,7 @@ namespace Stryker.Core.MutationTest
             bool forceSingle)
         {
             TestRunResult result = null;
-            Logger.LogTrace($"Testing {string.Join(" ,", mutantsToTest.Select(x => x.DisplayName))}.");
+            Logger.LogTrace($"Testing {string.Join(", ", mutantsToTest.Select(x => x.DisplayName))}.");
             if (TestRunner is IMultiTestRunner multi && !forceSingle)
             {
                 result = multi.TestMultipleMutants(timeoutMs, mutantsToTest.ToList(), updateHandler);
@@ -99,7 +99,7 @@ namespace Stryker.Core.MutationTest
             {
                 foreach (var mutant in mutantsToTest)
                 {
-                    mutant.AnalyzeTestRun(result.FailingTests, result.RanTests, result.TimedOutTests);
+                    mutant.AnalyzeTestRun(result?.FailingTests, result?.RanTests, result?.TimedOutTests);
                 }
             }
 

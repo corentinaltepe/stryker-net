@@ -1,4 +1,4 @@
-﻿using Crayon;
+using Crayon;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
@@ -77,6 +77,7 @@ namespace Stryker.CLI
             var azureFileStorageUrl = CreateOption(app, CLIOptions.AzureFileStorageUrl);
             var mutationLevelParam = CreateOption(app, CLIOptions.MutationLevel);
             var dashboardCompareFileExcludePatterns = CreateOption(app, CLIOptions.DiffIgnoreFiles);
+            var tracedMutants = CreateOption(app, CLIOptions.TracedMutants);
 
             app.HelpOption("--help | -h | -?");
 
@@ -120,7 +121,8 @@ namespace Stryker.CLI
                     azureFileStorageUrl: azureFileStorageUrl,
                     azureSAS: azureSAS,
                     mutationLevel: mutationLevelParam,
-                    dashboardCompareFileExcludePatterns: dashboardCompareFileExcludePatterns);
+                    dashboardCompareFileExcludePatterns: dashboardCompareFileExcludePatterns,
+                    mutantsToLog: tracedMutants);
 
                 RunStryker(options);
                 return ExitCode;
@@ -130,7 +132,7 @@ namespace Stryker.CLI
 
         private void RunStryker(StrykerOptions options)
         {
-            PrintStykerASCIIName();
+            PrintStrykerASCIIName();
             _ = PrintStrykerVersionInformationAsync();
 
             StrykerRunResult result = _stryker.RunMutationTest(options, _logBuffer.GetMessages());
@@ -158,7 +160,7 @@ namespace Stryker.CLI
             }
         }
 
-        private void PrintStykerASCIIName()
+        private void PrintStrykerASCIIName()
         {
             // Crayon does not support background coloring (yet)
             Console.WriteLine(Output.FromRgb(241, 196, 15).Text(@"

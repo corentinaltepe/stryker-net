@@ -122,6 +122,7 @@ namespace Stryker.Core.TestRunners.VsTest
 
                     _logger.LogTrace($"{RunnerId}: Testing [{string.Join(',', mutants.Select(m => m.DisplayName))}] " +
                                       $"against {(testCases == null ? "all tests." : string.Join(", ", testCases.Select(x => x.FullyQualifiedName)))}.");
+
                     if (testCases?.Count == 0)
                     {
                         return new TestRunResult(TestListDescription.NoTest(), TestListDescription.NoTest(), TestListDescription.NoTest(), "Mutants are not covered by any test!");
@@ -176,7 +177,7 @@ namespace Stryker.Core.TestRunners.VsTest
 
             var message = string.Join(Environment.NewLine,
                 resultAsArray.Where(tr => !string.IsNullOrWhiteSpace(tr.ErrorMessage))
-                    .Select(tr => tr.ErrorMessage));
+                    .Select(tr => $"{tr.TestCase.DisplayName}: {tr.ErrorMessage}"));
             var failedTestsDescription = new TestListDescription(failedTests);
             var timedOutTests = new TestListDescription(testResults.TestsInTimeout?.Select(t => (TestDescription)t));
             return timeout ? TestRunResult.TimedOut(ranTests, failedTestsDescription, timedOutTests, message) : new TestRunResult(ranTests, failedTestsDescription, timedOutTests, message);
@@ -397,7 +398,8 @@ namespace Stryker.Core.TestRunners.VsTest
             var targetFramework = projectAnalyzerResult.GetTargetFrameworkAndVersion().Framework;
 
             var needCoverage = forCoverage && NeedCoverage();
-            var dataCollectorSettings = (forMutantTesting || forCoverage) ? CoverageCollector.GetVsTestSettings(needCoverage, mutantTestsMap, CodeInjection.HelperNamespace) : "";
+
+            var dataCollectorSettings = (forMutantTesting || forCoverage) ? CoverageCollector.GetVsTestSettings(needCoverage, mutantTestsMap, CodeInjection.HelperNamespace, _options.TracedMutants) : "";
             var settingsForCoverage = string.Empty;
             if (_testFramework.HasFlag(TestFramework.nUnit))
             {

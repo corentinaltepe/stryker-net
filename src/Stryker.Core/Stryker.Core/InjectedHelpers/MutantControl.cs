@@ -1,4 +1,4 @@
-﻿using Stryker.Core.InjectedHelpers.Coverage;
+using Stryker.Core.InjectedHelpers.Coverage;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,6 +18,8 @@ namespace Stryker
         public static bool CaptureCoverage;
         public static int ActiveMutant = -2;
         public const int ActiveMutantNotInitValue = -2;
+        public static bool MustLog;
+        public static bool ActiveMutantSeen;
 #if !STRYKER_NO_PIPE
         private static CommunicationChannel channel;
 #endif
@@ -97,8 +99,10 @@ namespace Stryker
 
         private static void Log(string message)
         {
-            // uncomment when you need to debug this component
-            //Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss.fff") + " DBG] " + message);
+            if (MustLog)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss.fff") + " DBG] " + message);
+            }
         }
 
         // check with: Stryker.MutantControl.IsActive(ID)
@@ -107,6 +111,7 @@ namespace Stryker
             if (CaptureCoverage)
             {
                 RegisterCoverage(id);
+                Log($"Capture coverage for mutant {id}.");
                 return false;
             }
             if (ActiveMutant == ActiveMutantNotInitValue)
@@ -122,7 +127,20 @@ namespace Stryker
                 }
             }
 
-            return id == ActiveMutant;
+            bool isActive = id == ActiveMutant;
+            if (MustLog)
+            {
+                if (isActive)
+                {
+                    ActiveMutantSeen = true;
+                    Log($"Passing on ActiveMutant ({id})!");
+                }
+                else
+                {
+                    Log($"Pass on inactive mutation ({id}).");
+                }
+            }
+            return isActive;
         }
 
         private static void RegisterCoverage(int id)

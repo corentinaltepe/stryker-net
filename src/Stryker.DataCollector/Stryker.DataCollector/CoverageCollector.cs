@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -19,14 +19,18 @@ namespace Stryker.DataCollector
         private int _activeMutation = -1;
         private Action<string> _logger;
         private readonly IDictionary<string, int> _mutantTestedBy = new Dictionary<string, int>();
-        private int? _singleMutant = null;
+        private int? _singleMutant;
 
         private string _controlClassName;
         private Type _controller;
         private FieldInfo _activeMutantField;
+        private FieldInfo _logControlField;
+        private FieldInfo _activeMutantSeenField;
         private FieldInfo _coverageControlField;
 
         private MethodInfo _getCoverageData;
+        private IEnumerable<int> _mutantsToLog;
+        private bool _mustLog;
 
         private const string TemplateForConfiguration = 
             @"<InProcDataCollectionRunSettings><InProcDataCollectors><InProcDataCollector {0}>
@@ -34,7 +38,7 @@ namespace Stryker.DataCollector
 
         public string MutantList => _singleMutant?.ToString() ?? string.Join(",", _mutantTestedBy.Values.Distinct());
 
-        public static string GetVsTestSettings(bool needCoverage, Dictionary<int, IList<string>> mutantTestsMap, string helpNameSpace)
+        public static string GetVsTestSettings(bool needCoverage, Dictionary<int, IList<string>> mutantTestsMap, string helpNameSpace, IEnumerable<int> mutantsToLog)
         {
             var codeBase = typeof(CoverageCollector).GetTypeInfo().Assembly.Location;
             var qualifiedName = typeof(CoverageCollector).AssemblyQualifiedName;
@@ -45,6 +49,7 @@ namespace Stryker.DataCollector
             var line= $"friendlyName=\"{friendlyName}\" uri=\"{uri}\" codebase=\"{codeBase}\" assemblyQualifiedName=\"{qualifiedName}\"";
             var configuration = new StringBuilder();
             configuration.Append("<Parameters>");
+
             if (needCoverage)
             {
                 configuration.Append("<Coverage/>");
@@ -58,6 +63,14 @@ namespace Stryker.DataCollector
             }
 
             configuration.Append($"<MutantControl  name='{helpNameSpace}.MutantControl'/>");
+            if (mutantTestsMap != null && mutantsToLog != null)
+            {
+                var mutantsOfInterest = string.Join(",", mutantsToLog.Where(mutantTestsMap.ContainsKey));
+                if (!string.IsNullOrEmpty(mutantsOfInterest))
+                {
+                    configuration.Append($"<MutantsToLog>{mutantsOfInterest}</MutantsToLog>");
+                }
+            }
             configuration.Append("</Parameters>");
             
             return string.Format(TemplateForConfiguration, line, configuration);
@@ -73,9 +86,16 @@ namespace Stryker.DataCollector
             _logger = logger;
         }
 
-        public void Log(string message)
+        private void Log(string message)
         {
-            _logger?.Invoke(message);
+            if (_logger != null)
+            {
+                _logger.Invoke(message);
+            }
+            else if (_mustLog)
+            {
+                Console.Error.WriteLine(message);
+            }
         }
 
         // called before any test is run
@@ -114,7 +134,9 @@ namespace Stryker.DataCollector
             }
 
             _activeMutantField = _controller.GetField("ActiveMutant");
+            _logControlField = _controller.GetField("MustLog");
             _coverageControlField = _controller.GetField("CaptureCoverage");
+            _activeMutantSeenField = _controller.GetField("ActiveMutantSeen");
             _getCoverageData = _controller.GetMethod("GetCoverageData");
 
             if (_coverageOn)
@@ -122,10 +144,19 @@ namespace Stryker.DataCollector
                 _coverageControlField.SetValue(null, true);
             }
             _activeMutantField.SetValue(null, _activeMutation);
+            _activeMutantSeenField.SetValue(null, false);
         }
 
         private void SetActiveMutation(int id)
         {
+            if (this._mutantsToLog != null)
+            {
+                _mustLog = this._mutantsToLog.Contains(id);
+                if (_logControlField != null)
+                {
+                    _logControlField.SetValue(null, _mustLog);
+                }
+            }
             _activeMutation = id;
             if (_activeMutantField != null)
             {
@@ -163,13 +194,19 @@ namespace Stryker.DataCollector
             var nameSpaceNode = node.SelectSingleNode("//Parameters/MutantControl");
             if (nameSpaceNode != null)
             {
-                this._controlClassName = nameSpaceNode.Attributes["name"].Value;
+                _controlClassName = nameSpaceNode.Attributes["name"].Value;
             }
 
             var coverage = node.SelectSingleNode("//Parameters/Coverage");
             if (coverage != null)
             {
                 _coverageOn = true;
+            }
+
+            var mutantsToLogConfiguration = node.SelectSingleNode("//Parameters/MutantsToLog");
+            if (mutantsToLogConfiguration?.FirstChild?.Value != null)
+            {
+                _mutantsToLog = mutantsToLogConfiguration.FirstChild.Value.Split(',').Select(int.Parse);
             }
         }
 
@@ -219,7 +256,7 @@ namespace Stryker.DataCollector
             }
         }
 
-        public string RetrieveCoverData()
+        private string RetrieveCoverData()
         {
             var covered = (IList<int>[]) _getCoverageData.Invoke(null, new object[]{});
             var coverData = string.Join(",", covered[0]) + ";" + string.Join(",", covered[1]);

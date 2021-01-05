@@ -98,45 +98,48 @@ namespace Stryker.Core.MutationTest
         {
             var mutantGroups = BuildMutantGroupsForTest(mutantsToTest.ToList());
 
+            if (_options.TracedMutants != null && _options.TracedMutants.Any())
+            {
+                _logger.LogInformation($"We will only tests the mutant(s) configured for tracing({string.Join(',', _options.TracedMutants)}).");
+                mutantGroups = mutantGroups.Where(l => l.Any(t => _options.TracedMutants.Contains(t.Id)));
+            }
+
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _options.ConcurrentTestrunners };
 
-            Parallel.ForEach(mutantGroups, parallelOptions, mutants =>
-            {
-                var reportedMutants = new HashSet<Mutant>();
-
-                bool testUpdateHandler(IReadOnlyList<Mutant> testedMutants, ITestListDescription failedTests, ITestListDescription ranTests, ITestListDescription timedOutTest)
-                {
-                    var continueTestRun = !_options.Optimizations.HasFlag(OptimizationFlags.AbortTestOnKill);
-                    foreach (var mutant in testedMutants)
-                    {
-                        mutant.AnalyzeTestRun(failedTests, ranTests, timedOutTest);
-
-                        if (mutant.ResultStatus == MutantStatus.NotRun)
-                        {
-                            continueTestRun = true; // Not all mutants in this group were tested so we continue
-                        }
-
-                        OnMutantTested(mutant, reportedMutants); // Report on mutant that has been tested
-                    }
-
-                    return continueTestRun;
-                }
-                _mutationTestExecutor.Test(mutants, Input.TimeoutMs, testUpdateHandler);
-
-                OnMutantsTested(mutants, reportedMutants);
-            });
+            Parallel.ForEach(mutantGroups, parallelOptions, TestOneMutantGroup);
         }
 
-        private void OnMutantsTested(List<Mutant> mutants, HashSet<Mutant> reportedMutants)
+        private void TestOneMutantGroup(List<Mutant> mutants)
         {
-            foreach (var mutant in mutants)
+            var reportedMutants = new HashSet<Mutant>();
+
+            _mutationTestExecutor.Test(mutants, Input.TimeoutMs,
+                (testedMutants, failedTests, ranTests, timedOutTest) =>
             {
-                if (mutant.ResultStatus == MutantStatus.NotRun)
+                var continueTestRun = !_options.Optimizations.HasFlag(OptimizationFlags.AbortTestOnKill);
+                foreach (var mutant in testedMutants)
                 {
-                    _logger.LogWarning($"Mutation {mutant.Id} was not fully tested.");
+                    mutant.AnalyzeTestRun(failedTests, ranTests, timedOutTest);
+
+                    if (mutant.ResultStatus == MutantStatus.NotRun)
+                    {
+                        continueTestRun = true; // Not all mutants in this group were tested so we continue
+                    }
+
+                    OnMutantTested(mutant, reportedMutants); // Report on mutant that has been tested
                 }
 
-                OnMutantTested(mutant, reportedMutants);
+                return continueTestRun;
+            });
+
+            foreach (var MutantAsync in mutants)
+            {
+                if (MutantAsync.ResultStatus == MutantStatus.NotRun)
+                {
+                    _logger.LogWarning($"Mutation {MutantAsync.Id} was not fully tested.");
+                }
+
+                OnMutantTested(MutantAsync, reportedMutants);
             }
         }
 
@@ -144,12 +147,13 @@ namespace Stryker.Core.MutationTest
         {
             if (mutant.ResultStatus != MutantStatus.NotRun && !reportedMutants.Contains(mutant))
             {
+                _logger.LogDebug("Mutant {Ø} has been tested, result is {1}.", mutant.DisplayName, mutant.ResultStatus);
                 _reporter.OnMutantTested(mutant);
                 reportedMutants.Add(mutant);
             }
         }
 
-        private bool MutantsToTest(IEnumerable<Mutant> mutantsToTest)
+        private static bool MutantsToTest(IEnumerable<Mutant> mutantsToTest)
         {
             if (!mutantsToTest.Any())
             {
@@ -165,7 +169,6 @@ namespace Stryker.Core.MutationTest
 
         private IEnumerable<List<Mutant>> BuildMutantGroupsForTest(IReadOnlyCollection<Mutant> mutantsNotRun)
         {
-
             if (_options.Optimizations.HasFlag(OptimizationFlags.DisableTestMix) || !_options.Optimizations.HasFlag(OptimizationFlags.CoverageBasedTest))
             {
                 return mutantsNotRun.Select(x => new List<Mutant> { x });

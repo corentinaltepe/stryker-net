@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
@@ -16,6 +16,8 @@ namespace Stryker.Core.UnitTest.TestRunners
     {
         public static bool CaptureCoverage;
         public static int ActiveMutant = -1;
+        public static bool ActiveMutantSeen;
+        public static bool MustLog;
         public static IList<int>[] GetCoverageData()
         {
             return new List<int>[2];
@@ -31,7 +33,7 @@ namespace Stryker.Core.UnitTest.TestRunners
 
             var start = new TestSessionStartArgs
             {
-                Configuration = CoverageCollector.GetVsTestSettings(true, null, "Stryker.Core.UnitTest.TestRunners")
+                Configuration = CoverageCollector.GetVsTestSettings(true, null, "Stryker.Core.UnitTest.TestRunners", null)
             };
             var mock = new Mock<IDataCollectionSink>(MockBehavior.Loose);
             collector.Initialize(mock.Object);
@@ -39,6 +41,33 @@ namespace Stryker.Core.UnitTest.TestRunners
             collector.TestSessionStart(start);
             collector.TestCaseStart(new TestCaseStartArgs(new TestCase("theTest", new Uri("xunit://"), "source.cs")));
             MutantControl.CaptureCoverage.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void SupportMutantSpecificTracing()
+        {
+            var collector = new CoverageCollector();
+
+            var testCase = new TestCase("theTest", new Uri("xunit://"), "source.cs");
+            var otherTestCase = new TestCase("theOtherTest", new Uri("xunit://"), "source.cs");
+            var map = new Dictionary<int, IList<string>>{{12, new List<string>(new []{testCase.Id.ToString()})},
+                {15, new List<string>(new []{otherTestCase.Id.ToString()})}};
+            var start = new TestSessionStartArgs
+            {
+                Configuration = CoverageCollector.GetVsTestSettings(false, map, "Stryker.Core.UnitTest.TestRunners", new []{12})
+            };
+            var mock = new Mock<IDataCollectionSink>(MockBehavior.Loose);
+            collector.Initialize(mock.Object);
+
+            collector.TestSessionStart(start);
+            collector.TestCaseStart(new TestCaseStartArgs(testCase));
+            MutantControl.MustLog.ShouldBeTrue();
+            MutantControl.ActiveMutant.ShouldBe(12);
+            collector.TestCaseEnd(new TestCaseEndArgs(new DataCollectionContext(testCase), TestOutcome.Passed));
+            collector.TestCaseStart(new TestCaseStartArgs(otherTestCase));
+            MutantControl.MustLog.ShouldBeFalse();
+            MutantControl.ActiveMutant.ShouldBe(15);
+            collector.TestCaseEnd(new TestCaseEndArgs(new DataCollectionContext(testCase), TestOutcome.Passed));
         }
 
         [Fact]
@@ -50,7 +79,7 @@ namespace Stryker.Core.UnitTest.TestRunners
 
             var start = new TestSessionStartArgs
             {
-                Configuration = CoverageCollector.GetVsTestSettings(false, mutantMap, this.GetType().Namespace)
+                Configuration = CoverageCollector.GetVsTestSettings(false, mutantMap, this.GetType().Namespace, null)
             };
             var mock = new Mock<IDataCollectionSink>(MockBehavior.Loose);
             collector.Initialize(mock.Object);
@@ -63,4 +92,3 @@ namespace Stryker.Core.UnitTest.TestRunners
         }
     }
 }
-    

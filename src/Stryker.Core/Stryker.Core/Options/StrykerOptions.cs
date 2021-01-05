@@ -28,6 +28,7 @@ namespace Stryker.Core.Options
         public IEnumerable<Reporter> Reporters { get; }
         public LogOptions LogOptions { get; }
         public bool DevMode { get; }
+
         /// <summary>
         /// The user can pass a filter to match the project under test from multiple project references
         /// </summary>
@@ -62,6 +63,8 @@ namespace Stryker.Core.Options
         public string AzureFileStorageUrl { get; set; }
 
         public string FallbackVersion { get; }
+
+        public IEnumerable<int> TracedMutants { get;  }
 
         private const string ErrorMessage = "The value for one of your settings is not correct. Try correcting or removing them.";
         private readonly IFileSystem _fileSystem;
@@ -105,11 +108,11 @@ namespace Stryker.Core.Options
             string azureFileStorageUrl = null,
             IEnumerable<string> testProjects = null,
             string mutationLevel = null,
-            string[] diffIgnoreFiles = null)
+            IEnumerable<string> diffIgnoreFiles = null,
+            IEnumerable<int> tracedMutants = null)
         {
             _logger = logger;
             _fileSystem = fileSystem ?? new FileSystem();
-
             var outputPath = ValidateOutputPath(basePath);
             IgnoredMethods = ValidateIgnoredMethods(ignoredMethods ?? Array.Empty<string>());
             BasePath = basePath;
@@ -141,6 +144,7 @@ namespace Stryker.Core.Options
             BaselineProvider = ValidateBaselineProvider(baselineStorageLocation);
             (AzureSAS, AzureFileStorageUrl) = ValidateAzureFileStorage(azureSAS, azureFileStorageUrl);
             MutationLevel = ValidateMutationLevel(mutationLevel ?? MutationLevel.Standard.ToString());
+            TracedMutants = tracedMutants;
         }
 
         private StrykerOptions(
@@ -167,7 +171,8 @@ namespace Stryker.Core.Options
             string azureSAS,
             string azureFileStorageUrl,
             BaselineProvider baselineProvider,
-            MutationLevel mutationLevel)
+            MutationLevel mutationLevel,
+            IEnumerable<int> tracedMutants)
         {
             IgnoredMethods = ignoredMethods;
             BasePath = basePath;
@@ -193,6 +198,7 @@ namespace Stryker.Core.Options
             AzureFileStorageUrl = azureFileStorageUrl;
             BaselineProvider = baselineProvider;
             MutationLevel = mutationLevel;
+            TracedMutants = tracedMutants;
         }
 
         public IStrykerOptions Copy(string basePath, string projectUnderTest, IEnumerable<string> testProjects)
@@ -221,7 +227,8 @@ namespace Stryker.Core.Options
                 AzureSAS,
                 AzureFileStorageUrl,
                 BaselineProvider,
-                MutationLevel);
+                MutationLevel,
+                TracedMutants);
         }
 
         private (string AzureSAS, string AzureFileStorageUrl) ValidateAzureFileStorage(string azureSAS, string azureFileStorageUrl)
