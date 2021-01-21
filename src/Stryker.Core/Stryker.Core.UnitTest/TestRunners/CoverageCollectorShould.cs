@@ -47,11 +47,12 @@ namespace Stryker.Core.UnitTest.TestRunners
         public void SupportMutantSpecificTracing()
         {
             var collector = new CoverageCollector();
-
+            // We have two mutations and two tests. One test covers one mutation.
             var testCase = new TestCase("theTest", new Uri("xunit://"), "source.cs");
             var otherTestCase = new TestCase("theOtherTest", new Uri("xunit://"), "source.cs");
             var map = new Dictionary<int, IList<string>>{{12, new List<string>(new []{testCase.Id.ToString()})},
                 {15, new List<string>(new []{otherTestCase.Id.ToString()})}};
+            // ask to trace mutant 12
             var start = new TestSessionStartArgs
             {
                 Configuration = CoverageCollector.GetVsTestSettings(false, map, "Stryker.Core.UnitTest.TestRunners", new []{12})
@@ -59,11 +60,15 @@ namespace Stryker.Core.UnitTest.TestRunners
             var mock = new Mock<IDataCollectionSink>(MockBehavior.Loose);
             collector.Initialize(mock.Object);
 
+            // mock test 12
             collector.TestSessionStart(start);
             collector.TestCaseStart(new TestCaseStartArgs(testCase));
             MutantControl.MustLog.ShouldBeTrue();
             MutantControl.ActiveMutant.ShouldBe(12);
+            MutantControl.ActiveMutantSeen = true;
             collector.TestCaseEnd(new TestCaseEndArgs(new DataCollectionContext(testCase), TestOutcome.Passed));
+            MutantControl.ActiveMutantSeen.ShouldBeFalse();
+            // mock test 15
             collector.TestCaseStart(new TestCaseStartArgs(otherTestCase));
             MutantControl.MustLog.ShouldBeFalse();
             MutantControl.ActiveMutant.ShouldBe(15);

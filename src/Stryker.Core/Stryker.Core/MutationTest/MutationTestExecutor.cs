@@ -47,7 +47,6 @@ namespace Stryker.Core.MutationTest
                         Logger.LogError($"Stryker failed to test {remainingMutants.Count} mutant(s).");
                         return;
                     }
-
                     // test session's results have been corrupted by the time out
                     // we retry and run tests one by one, if necessary
                     if (remainingMutants.Count == 1)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Stryker.Core.Mutants
@@ -21,7 +21,6 @@ namespace Stryker.Core.Mutants
 
     public class TestListDescription : ITestListDescription
     {
-
         public List<TestDescription> Tests { get; private set; }
 
         private static readonly ITestListDescription EveryTests;

@@ -128,11 +128,11 @@ namespace Stryker
             }
 
             bool isActive = id == ActiveMutant;
+            ActiveMutantSeen |= isActive;
             if (MustLog)
             {
                 if (isActive)
                 {
-                    ActiveMutantSeen = true;
                     Log($"Passing on ActiveMutant ({id})!");
                 }
                 else

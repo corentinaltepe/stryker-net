@@ -36,6 +36,9 @@ namespace Stryker.DataCollector
             @"<InProcDataCollectionRunSettings><InProcDataCollectors><InProcDataCollector {0}>
 <Configuration>{1}</Configuration></InProcDataCollector></InProcDataCollectors></InProcDataCollectionRunSettings>";
 
+        public const string StrykerCoverageId = "Stryker.Coverage";
+        public const string StrykerMutantCoveredId = "Stryker.ActiveMutantCovered";
+
         public string MutantList => _singleMutant?.ToString() ?? string.Join(",", _mutantTestedBy.Values.Distinct());
 
         public static string GetVsTestSettings(bool needCoverage, Dictionary<int, IList<string>> mutantTestsMap, string helpNameSpace, IEnumerable<int> mutantsToLog)
@@ -143,8 +146,7 @@ namespace Stryker.DataCollector
             {
                 _coverageControlField.SetValue(null, true);
             }
-            _activeMutantField.SetValue(null, _activeMutation);
-            _activeMutantSeenField.SetValue(null, false);
+            SetActiveMutation(_activeMutation);
         }
 
         private void SetActiveMutation(int id)
@@ -158,10 +160,8 @@ namespace Stryker.DataCollector
                 }
             }
             _activeMutation = id;
-            if (_activeMutantField != null)
-            {
-                _activeMutantField.SetValue(null, _activeMutation);
-            }
+            _activeMutantField?.SetValue(null, _activeMutation);
+            _activeMutantSeenField?.SetValue(null, false);
         }
 
         private void ReadConfiguration(string configuration)
@@ -219,7 +219,6 @@ namespace Stryker.DataCollector
 
             // we need to set the proper mutant
             var mutantId = _singleMutant ?? _mutantTestedBy[testCaseStartArgs.TestCase.Id.ToString()];
-
             SetActiveMutation(mutantId);
 
             Log($"Test {testCaseStartArgs.TestCase.FullyQualifiedName} starts against mutant {mutantId} (var).");
@@ -228,8 +227,11 @@ namespace Stryker.DataCollector
         public void TestCaseEnd(TestCaseEndArgs testCaseEndArgs)
         {
             Log($"Test {testCaseEndArgs.DataCollectionContext.TestCase.FullyQualifiedName} ends.");
+
             if (!_coverageOn)
             {
+                _dataSink.SendData(testCaseEndArgs.DataCollectionContext, StrykerMutantCoveredId, _activeMutantSeenField.GetValue(null).ToString());
+                _activeMutantSeenField?.SetValue(null, false);
                 return;
             }
 
@@ -242,13 +244,12 @@ namespace Stryker.DataCollector
             // null means we failed to retrieve data
             if (coverData != null)
             {
-                if (coverData == string.Empty)
+                if (coverData.Length == 0)
                 {
-                    // test covers no mutant, but empty string is not a valid value
+                    // we cannot report an empty string.
                     coverData = " ";
                 }
-
-                _dataSink.SendData(testCaseEndArgs.DataCollectionContext, "Stryker.Coverage", coverData);
+                _dataSink.SendData(testCaseEndArgs.DataCollectionContext, StrykerCoverageId, coverData);
             }
             else
             {
@@ -258,7 +259,7 @@ namespace Stryker.DataCollector
 
         private string RetrieveCoverData()
         {
-            var covered = (IList<int>[]) _getCoverageData.Invoke(null, new object[]{});
+            var covered = (IList<int>[]) _getCoverageData.Invoke(null, Array.Empty<object>());
             var coverData = string.Join(",", covered[0]) + ";" + string.Join(",", covered[1]);
             return coverData;
         }

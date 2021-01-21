@@ -48,6 +48,7 @@ namespace Stryker.Core.TestRunners.VsTest
         private readonly ILogger _logger;
         private bool _aborted;
         private string RunnerId => $"Runner {_id}";
+        private TestProperty activeMutantCovered;
 
         public IEnumerable<TestDescription> Tests => _discoveredTests.Select(x => (TestDescription)x);
 
@@ -79,6 +80,7 @@ namespace Stryker.Core.TestRunners.VsTest
                 DetectTestFramework(testCasesDiscovered);
             }
             InitializeVsTestConsole();
+            activeMutantCovered = TestProperty.Register(CoverageCollector.StrykerMutantCoveredId, "Is the active mutant covered", typeof(string), GetType());
         }
 
         private bool CantUseStrykerDataCollector()
@@ -139,7 +141,7 @@ namespace Stryker.Core.TestRunners.VsTest
             }
 
             var expectedTests = testCases?.Count ?? DiscoverNumberOfTests();
-
+            var suspiciousTests = new HashSet<(string, int)>();
             void HandleUpdate(IRunResults handler)
             {
                 if (mutants == null)
@@ -154,6 +156,20 @@ namespace Stryker.Core.TestRunners.VsTest
                     .Select(tr => (TestDescription)tr.TestCase));
                 var timedOutTests = new TestListDescription(handler.TestsInTimeout?.Select(t => (TestDescription)t));
                 var remainingMutants = update?.Invoke(mutants, failedTest, tests, timedOutTests);
+                // check if a test failed to test the associated mutant
+                // TODO: finish this
+                foreach (var test in handlerTestResults.Where(t => t.Outcome == TestOutcome.Passed || t.Outcome == TestOutcome.Failed))
+                {
+                    var val = test.GetPropertyValue(activeMutantCovered);
+                    if (val != null && !bool.Parse(val.ToString()))
+                    {
+                        var m = mutants.FirstOrDefault(m => m.CoveringTests.Contains(test.TestCase.Id.ToString()));
+                        if (m != null && !m.MustRunAgainstAllTests && suspiciousTests.Add((test.TestCase.Id.ToString(), m.Id)))
+                        {
+                            _logger.LogWarning($"Mutant {m?.Id} was not tested by {test.DisplayName}.");
+                        }
+                    }
+                }
                 if (handlerTestResults.Count >= expectedTests || remainingMutants != false || _aborted)
                 {
                     return;
@@ -265,12 +281,11 @@ namespace Stryker.Core.TestRunners.VsTest
             var dynamicTestCases = new HashSet<Guid>();
             foreach (var testResult in testResults)
             {
-                var (key, value) = testResult.GetProperties().FirstOrDefault(x => x.Key.Id == "Stryker.Coverage");
+                var (key, value) = testResult.GetProperties().FirstOrDefault(x => x.Key.Id == CoverageCollector.StrykerCoverageId);
                 if (key == null)
                 {
-                    if (seenTestCases.Contains(testResult.TestCase.Id) && !dynamicTestCases.Contains(testResult.TestCase.Id))
+                    if (seenTestCases.Contains(testResult.TestCase.Id) && !dynamicTestCases.Add(testResult.TestCase.Id))
                     {
-                        dynamicTestCases.Add(testResult.TestCase.Id);
                         // register dynamic testcases
                         foreach (var mutant in mutants)
                         {
@@ -322,7 +337,7 @@ namespace Stryker.Core.TestRunners.VsTest
             _logger.LogDebug($"{RunnerId}: Capturing coverage for {test.FullyQualifiedName}.");
             var testResults = RunTestSession(new[] { test }, GenerateRunSettings(null, false, true, null));
             ParseResultsForCoverage(testResults.TestResults.Where(x => x.TestCase.Id == test.Id), mutants);
-            // we cancel the test. Avoid using 'Abort' method, as we use the Aborted status to identify timeouts.
+            // we cancel the test. Avoid using 'Abort' method, as we use the 'Aborted' status to identify timeouts.
             _vsTestConsole.CancelTestRun();
         }
 

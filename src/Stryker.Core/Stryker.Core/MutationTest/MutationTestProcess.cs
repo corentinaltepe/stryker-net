@@ -88,7 +88,6 @@ namespace Stryker.Core.MutationTest
             }
 
             TestMutants(mutantsToTest);
-
             _mutationTestExecutor.TestRunner.Dispose();
 
             return new StrykerRunResult(_options, _projectContents.ToReadOnlyInputComponent().GetMutationScore());
@@ -100,8 +99,19 @@ namespace Stryker.Core.MutationTest
 
             if (_options.TracedMutants != null && _options.TracedMutants.Any())
             {
-                _logger.LogInformation($"We will only tests the mutant(s) configured for tracing({string.Join(',', _options.TracedMutants)}).");
-                mutantGroups = mutantGroups.Where(l => l.Any(t => _options.TracedMutants.Contains(t.Id)));
+                if (_options.DevMode)
+                {
+                    _logger.LogInformation(
+                        $"We will only tests the mutant(s) configured for tracing({string.Join(',', _options.TracedMutants)}).");
+                    mutantGroups = mutantGroups.Select(t => t.Where(m => _options.TracedMutants.Contains(m.Id)).ToList()).Where(t => t.Count>0);
+
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        $"We will only tests groups which contains mutant(s) configured for tracing({string.Join(',', _options.TracedMutants)}).");
+                    mutantGroups = mutantGroups.Where(l => l.Any(t => _options.TracedMutants.Contains(t.Id)));
+                }
             }
 
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = _options.ConcurrentTestrunners };
