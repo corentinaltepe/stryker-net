@@ -1,12 +1,12 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Stryker.Core.TestRunners.VsTest
 {
-    public class DiscoveryEventHandler : ITestDiscoveryEventsHandler
+    public class DiscoveryEventHandler : ITestDiscoveryEventsHandler, ITestDiscoveryEventsHandler2
     {
         private AutoResetEvent waitHandle;
         private readonly List<string> _messages;
@@ -36,6 +36,19 @@ namespace Stryker.Core.TestRunners.VsTest
             }
 
             Aborted = isAborted;
+            waitHandle.Set();
+        }
+
+        public void HandleDiscoveryComplete(
+            DiscoveryCompleteEventArgs discoveryCompleteEventArgs,
+            IEnumerable<TestCase> lastChunk)
+        {
+            if (lastChunk != null)
+            {
+                DiscoveredTestCases.AddRange(lastChunk);
+            }
+
+            Aborted = discoveryCompleteEventArgs.IsAborted;
             waitHandle.Set();
         }
 

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer.Interfaces;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Serilog.Events;
 using Stryker.Core.Exceptions;
 using Stryker.Core.Initialisation;
@@ -203,7 +204,9 @@ namespace Stryker.Core.TestRunners.VsTest
             {
                 var handler = new DiscoveryEventHandler(waitHandle, _messages);
                 var generateRunSettings = GenerateRunSettings(null, false, false, null);
-                _vsTestConsole.DiscoverTests(_sources, runSettings ?? generateRunSettings, handler);
+                var vsTestOptions = new TestPlatformOptions { TestCaseFilter = "Category=unit" };
+
+                _vsTestConsole.DiscoverTests(_sources, runSettings ?? generateRunSettings, vsTestOptions, handler);
 
                 waitHandle.WaitOne();
                 if (handler.Aborted)
