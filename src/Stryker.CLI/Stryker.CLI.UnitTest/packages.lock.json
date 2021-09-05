@@ -2040,13 +2040,13 @@
           "xunit.extensibility.core": "[2.4.1]"
         }
       },
-      "dotnet-stryker": {
+      "corentinaltepe-dotnet-stryker": {
         "type": "Project",
         "dependencies": {
           "McMaster.Extensions.CommandLineUtils": "3.1.0",
           "Microsoft.Extensions.Configuration.Binder": "5.0.0",
           "NuGet.Versioning": "5.10.0",
-          "stryker": "0.22.10"
+          "stryker": "1.0.0-rc1"
         }
       },
       "stryker": {
@@ -2073,7 +2073,7 @@
           "Serilog.Extensions.Logging.File": "2.0.0",
           "Serilog.Sinks.Console": "4.0.0",
           "ShellProgressBar": "5.1.0",
-          "Stryker.DataCollector": "0.16.1",
+          "Stryker.DataCollector": "1.0.0",
           "Stryker.RegexMutators": "1.0.0",
           "System.IO.Abstractions": "13.2.43"
         }
