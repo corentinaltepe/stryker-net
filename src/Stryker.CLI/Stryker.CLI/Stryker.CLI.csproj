@@ -11,11 +11,11 @@
   
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <VersionSuffix>rc1</VersionSuffix>
+    <VersionSuffix>preview1</VersionSuffix>
     <PackageId>dotnet-stryker</PackageId>
     <Authors>Richard Werkman, Rouke Broersma</Authors>
     <Product>Mutation Testing</Product>
-    <Description>The Stryker.NET CLI tool. Install this tool to run stryker from the commandline.</Description>
+    <Description>The UNOFFICIAL Stryker.NET CLI tool v1.0 PREVIEW. Install this tool to run stryker from the commandline. Go to https://www.nuget.org/packages/dotnet-stryker/ for the official release.</Description>
     <PackageProjectUrl>https://stryker-mutator.io/</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIconUrl>https://raw.githubusercontent.com/stryker-mutator/stryker/master/stryker-80x80.png</PackageIconUrl>
